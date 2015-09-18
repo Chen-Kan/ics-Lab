@@ -249,11 +249,10 @@ int tmin(void) {
  *   Rating: 2
  */
 int fitsBits(int x, int n) {
-	int andNum = ((1 << 31) >> (32 + ~n + 1) << 1);
-	andNum = ~andNum;
-	//printf("%d\n",andNum);
-	return !(((~x+1) & andNum) + x);
+	x = x >> (n + ~0);
+	return !x | !(~x);
 }
+
 /* 
  * divpwr2 - Compute x/(2^n), for 0 <= n <= 30
  *  Round toward zero
