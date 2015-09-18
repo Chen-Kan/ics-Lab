@@ -249,6 +249,8 @@ int tmin(void) {
  *   Rating: 2
  */
 int fitsBits(int x, int n) {
+	//将x右移n-1位
+	//若n位二进制可以装的下x，则移位后x全为1或者全为0
 	x = x >> (n + ~0);
 	return !x | !(~x);
 }
