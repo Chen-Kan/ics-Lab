@@ -12,7 +12,6 @@
  * it's not good practice to ignore compiler warnings, but in this
  * case it's OK.  
  */
-
 //#include <stdlib.h>
 #if 0
 /*
@@ -20,39 +19,31 @@
  *
  * STEP 1: Read the following instructions carefully.
  */
-
 You will provide your solution to the Data Lab by
 editing the collection of functions in this source file.
-
 INTEGER CODING RULES:
- 
   Replace the "return" statement in each function with one
   or more lines of C code that implements the function. Your code 
   must conform to the following style:
- 
   int Funct(arg1, arg2, ...) {
       /* brief description of how your implementation works */
       int var1 = Expr1;
       ...
       int varM = ExprM;
-
       varJ = ExprJ;
       ...
       varN = ExprN;
       return ExprR;
   }
-
   Each "Expr" is an expression using ONLY the following:
   1. Integer constants 0 through 255 (0xFF), inclusive. You are
       not allowed to use big constants such as 0xffffffff.
   2. Function arguments and local variables (no global variables).
   3. Unary integer operations ! ~
   4. Binary integer operations & ^ | + << >>
-    
   Some of the problems restrict the set of allowed operators even further.
   Each "Expr" may consist of multiple operators. You are not restricted to
   one operator per line.
-
   You are expressly forbidden to:
   1. Use any control constructs such as if, do, while, for, switch, etc.
   2. Define or use any macros.
@@ -62,14 +53,11 @@ INTEGER CODING RULES:
   6. Use any form of casting.
   7. Use any data type other than int.  This implies that you
      cannot use arrays, structs, or unions.
-
- 
   You may assume that your machine:
   1. Uses 2s complement, 32-bit representations of integers.
   2. Performs right shifts arithmetically.
   3. Has unpredictable behavior when shifting an integer by more
      than the word size.
-
 EXAMPLES OF ACCEPTABLE CODING STYLE:
   /*
    * pow2plus1 - returns 2^x + 1, where 0 <= x <= 31
@@ -78,7 +66,6 @@ EXAMPLES OF ACCEPTABLE CODING STYLE:
      /* exploit ability of shifts to compute powers of 2 */
      return (1 << x) + 1;
   }
-
   /*
    * pow2plus4 - returns 2^x + 4, where 0 <= x <= 31
    */
@@ -88,14 +75,11 @@ EXAMPLES OF ACCEPTABLE CODING STYLE:
      result += 4;
      return result;
   }
-
 FLOATING POINT CODING RULES
-
 For the problems that require you to implent floating-point operations,
 the coding rules are less strict.  You are allowed to use looping and
 conditional control.  You are allowed to use both ints and unsigneds.
 You can use arbitrary integer and unsigned constants.
-
 You are expressly forbidden to:
   1. Define or use any macros.
   2. Define any additional functions in this file.
@@ -104,8 +88,6 @@ You are expressly forbidden to:
   5. Use any data type other than int or unsigned.  This means that you
      cannot use arrays, structs, or unions.
   6. Use any floating point data types, operations, or constants.
-
-
 NOTES:
   1. Use the dlc (data lab checker) compiler (described in the handout) to 
      check the legality of your solutions.
@@ -119,7 +101,6 @@ NOTES:
      header comment for each function. If there are any inconsistencies 
      between the maximum ops in the writeup and in this file, consider
      this file the authoritative source.
-
 /*
  * STEP 2: Modify the following functions according the coding rules.
  * 
@@ -129,8 +110,6 @@ NOTES:
  *   2. Use the BDD checker to formally verify that your solutions produce 
  *      the correct answers.
  */
-
-
 #endif
 /* 
  * bitAnd - x&y using only ~ and | 
@@ -143,8 +122,6 @@ int bitAnd(int x, int y) {
 	//由摩尔定理即可得到
   return ~((~x) | (~y));
 }
-
-
 /* 
  * getByte - Extract byte n from word x
  *   Bytes numbered from 0 (LSB) to 3 (MSB)
@@ -169,7 +146,6 @@ int getByte(int x, int n){
  */
 int logicalShift(int x, int n) {
 	int maxBit = (1 << 31);
-
 	//根据算术右移的特性maxBit >> n << 1结果为111...000
 	//即左边n个1，其他为0
 	//将这个数字取反，再and (x >> n) 即可取出右边32-n位
@@ -202,7 +178,6 @@ int bitCount(int x) {
 	x = x + ~((x >> 1) & ox55555555) + 1;
 	x = (x & ox33333333) + ((x >> 2) & ox33333333);
 	x = (x + (x >> 4)) & ox0f0f0f0f;
-
 	return ( x + (x >> 8) + (x >> 16) + (x >> 24)) & 0xff;
 }
 /* 
@@ -223,7 +198,6 @@ int bang(int x) {
 	x |= x >> 4;
 	x |= x >> 2;
 	x |= x >> 1;
-
 	return ((x & 1) ^ 1);
 }
 /* 
@@ -254,7 +228,6 @@ int fitsBits(int x, int n) {
 	x = x >> (n + ~0);
 	return !x | !(~x);
 }
-
 /* 
  * divpwr2 - Compute x/(2^n), for 0 <= n <= 30
  *  Round toward zero
@@ -281,7 +254,6 @@ int divpwr2(int x, int n) {
 	sign = (1<<31) & x;
 	sign ^= (!(x ^ sign) << 31);//mark0
 	all1 = sign >> 31;
-
 	oneOrZero = all1 & 1;
 	x = (x ^ all1) + oneOrZero;//mark1:求原码
 	//printf("x=%d  x-1=%d  sign=%d  oneOrZero=%d\n",x,x+~oneOrZero+1,sign,oneOrZero);
@@ -324,12 +296,10 @@ int isPositive(int x) {
 int isLessOrEqual(int x, int y) {
 	int sign1 = (y >> 31) & 1;//取出ｙ的符号
 	int sign2 = (x >> 31) & 1;//取出ｘ的符号
-
 	//x符号减去y的符号，结果有三种：0,1,-1。
 	//如果 x<0  且 y>=0 则ysubx == 1，此时一定返回1
 	//如果 x>=0 且 y<0  则ysubx == -1, 此时一定返回0
 	int ysubx = (sign2 + (~sign1 + 1));
-
 	return (((~(y + (~x+1))>>31) & 1) | ysubx) & (~ysubx >> 31) & 1;
 }
 /*
@@ -340,13 +310,46 @@ int isLessOrEqual(int x, int y) {
  *   Rating: 4
  */
 int ilog2(int x) {
-	int a;
-	int b = a;
-	int c = b;
-	int d = c;
-	int e = d;
-	a = e;
-	return 2;
+	int a,count=0,n,m;
+	a = x & (1 << 31 >> 15);
+	n = !!a;
+	m = !n;
+	//printf("%d %d\n",n,m);
+	//printf("%d\n",(a>>16) & ((n << 16) + ~0));
+	//printf("%d\n",(x & ((m << 16) + ~0)));
+	count += n << 4;
+	x = ((a >> 16) & ((n << 16) + ~0)) + (x & ((m << 16) + (~m+1)));
+	//printf("%d\n",x);
+	
+	a = x & (1 << 31 >> 23);
+	n = !!a;
+	m = !n;
+	count += n << 3;
+	x = ((a >> 8) & ((n << 8) + ~0)) + (x & ((m << 8) + (~m+1)));
+	//printf("%d\n",x);
+	
+	a = x & (1 << 31 >> 27);
+	n = !!a;
+	m = !n;
+	count += n << 2;
+	x = ((a >> 4) & ((n << 4) + ~0)) + (x & ((m << 4) + (~m+1)));
+	//printf("%d\n",x);
+	
+	a = x & (1 << 31 >> 29);
+	n = !!a;
+	m = !n;
+	count += n << 1;
+	x = ((a >> 2) & ((n << 2) + ~0)) + (x & ((m << 2) + (~m+1)));
+	//("%d\n",x);
+	
+	a = x & (1 << 31 >> 30);
+	n = !!a;
+	m = !n;
+	count += n;
+	x = ((a >> 1) & ((n << 1) + ~0)) + (x & ((m << 1) + ~0));
+	//printf("%d\n\n\n",x);
+	
+	return count;
 }
 /* 
  * float_neg - Return bit-level equivalent of expression -f for
