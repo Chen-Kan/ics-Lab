@@ -145,7 +145,7 @@ int getByte(int x, int n){
  *   Rating: 3 
  */
 int logicalShift(int x, int n) {
-	int maxBit = (1 << 31);
+	int maxBit = 1 << 31;
 	//根据算术右移的特性maxBit >> n << 1结果为111...000
 	//即左边n个1，其他为0
 	//将这个数字取反，再and (x >> n) 即可取出右边32-n位
@@ -310,44 +310,50 @@ int isLessOrEqual(int x, int y) {
  *   Rating: 4
  */
 int ilog2(int x) {
-	int a,count=0,n,m;
-	a = x & (1 << 31 >> 15);
-	n = !!a;
-	m = !n;
-	//printf("%d %d\n",n,m);
-	//printf("%d\n",(a>>16) & ((n << 16) + ~0));
-	//printf("%d\n",(x & ((m << 16) + ~0)));
-	count += n << 4;
-	x = ((a >> 16) & ((n << 16) + ~0)) + (x & ((m << 16) + (~m+1)));
-	//printf("%d\n",x);
+	//本方法利用二分，每次将数据切成两半，看左边是否为0
+	//例如：1.八位二进制数x=0001 0110,看左边不为零，那么count=4
+	//		  然后将左边0001取出，即x=00 01
+	//		2.再看左边两位为0，舍去，count不变，x=01
+	//		3.左边一位为0，舍去，count不变，x=1
+	//		4.答案为4
+	//
+	int a,count=0,n, ox80000000, rightBits;
+	ox80000000 = 1 << 31;
+	a = x & (ox80000000 >> 15);//a=0xffff0000,为了取出x左16位
+	//n，m分别代表下一次要对左边还是右边进行递归操作
+	n = !!a;//如果左为0，那么n=0;否则n=1
+	count += n << 4;//如果左边不为0，那么count+=16，否则不变
+	//rightBits为0x0000ffff 或者 0，为了取出右边16位进行迭代
+	rightBits = (n << 16) + (~n + 1);
+	//如果rightBits为0x0000ffff,则取x左边16位，反之取右16位
+	x = ((a >> 16) & rightBits) | (x & ~rightBits);
+	x &= (1 << 16) + ~0;//删去左边16位
 	
-	a = x & (1 << 31 >> 23);
+	//以下同理
+	a = x & (ox80000000 >> 23);
 	n = !!a;
-	m = !n;
 	count += n << 3;
-	x = ((a >> 8) & ((n << 8) + ~0)) + (x & ((m << 8) + (~m+1)));
-	//printf("%d\n",x);
+	rightBits = (n << 8) + (~n + 1);
+	x = ((a >> 8) & rightBits) | (x & ~rightBits);
+	x &= (1 << 8) + ~0;
 	
-	a = x & (1 << 31 >> 27);
+	a = x & (ox80000000 >> 27);
 	n = !!a;
-	m = !n;
 	count += n << 2;
-	x = ((a >> 4) & ((n << 4) + ~0)) + (x & ((m << 4) + (~m+1)));
-	//printf("%d\n",x);
+	rightBits = (n << 4) + (~n + 1);
+	x = ((a >> 4) & rightBits) | (x & ~rightBits);
+	x &= (1 << 4) + ~0;
 	
-	a = x & (1 << 31 >> 29);
+	a = x & (ox80000000 >> 29);
 	n = !!a;
-	m = !n;
 	count += n << 1;
-	x = ((a >> 2) & ((n << 2) + ~0)) + (x & ((m << 2) + (~m+1)));
-	//("%d\n",x);
+	rightBits = (n << 2) + (~n + 1);
+	x = ((a >> 2) & rightBits) | (x & ~rightBits);
+	x &= (1 << 2) + ~0;
 	
-	a = x & (1 << 31 >> 30);
+	a = x & (ox80000000 >> 30);
 	n = !!a;
-	m = !n;
 	count += n;
-	x = ((a >> 1) & ((n << 1) + ~0)) + (x & ((m << 1) + ~0));
-	//printf("%d\n\n\n",x);
 	
 	return count;
 }
@@ -363,7 +369,12 @@ int ilog2(int x) {
  *   Rating: 2
  */
 unsigned float_neg(unsigned uf) {
- return 2;
+
+	int e,s;
+	s = uf & 0x7fffff;//取出尾数
+	e = (uf >> 23) & 0xff;//取出阶码
+	if (e == 0xff && s) return uf;//如果是NaN直接返回
+	return uf ^ 0x80000000;
 }
 /* 
  * float_i2f - Return bit-level equivalent of expression (float) x
@@ -375,7 +386,31 @@ unsigned float_neg(unsigned uf) {
  *   Rating: 4
  */
 unsigned float_i2f(int x) {
-  return 2;
+	int sign, count, tmp, e, ans;
+	sign = (1 << 31) & x;
+	if (sign) x = -x;
+	count = 0; tmp = x;
+	while (tmp)
+	{
+		//printf("%d\n",tmp);
+		++count;
+		tmp /= 2;
+	}
+	--count;
+	printf("x=%d\n",x);
+	printf("x << %d = %d", 23-count,x << (23 -count));
+	if (count < 23) tmp = x << (23 - count);
+		else tmp = x >> (count -23);
+	tmp &= (1 << 23) - 1;
+	//tmp = (x << (23 - count)) & ((1 << 23) - 1);
+	e = count + 127;
+	if (!x && !sign)
+	{
+		e = 0;
+	}
+	printf("sign=%d  e=%d  weishu=%d\n",sign,e,tmp);
+	ans = sign | (e << 23) | tmp;
+  return ans;
 }
 /* 
  * float_twice - Return bit-level equivalent of expression 2*f for
@@ -389,5 +424,12 @@ unsigned float_i2f(int x) {
  *   Rating: 4
  */
 unsigned float_twice(unsigned uf) {
-  return 2;
+	int e,s,sign;
+	s = uf & 0x7fffff;//取出尾数
+	e = (uf >> 23) & 0xff;//取出阶码
+	sign = uf & (1 << 31);//取出符号
+	if (uf == 0 || uf == 0x80000000) return uf;//如果是0直接返回
+	if (e == 0xff) return uf;//如果是NaN或者无穷直接返回
+	if (!e) return sign | s*2;//阶码为0 
+	return uf + 0x800000;
 }
